@@ -1,10 +1,10 @@
-#Udacity Catalog Webserver Project
+# Udacity Catalog Webserver Project
 
 This project was written using specifications from Udacity's full stack developer course. This webserver application uses the Flask framework to store information in a database, and to serve that information to a webpage.
 
 This application uses Google's Sign In API to authenticate and authorize user sessions. Bootstrap is used for styling of the web application.
 
-##Getting Started
+## Getting Started
 
 To get started with the webserver project, follow these instructions: 
 1. Download and install a vagrant machine from [VagrantUp](https://www.vagrantup.com/). 
