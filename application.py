@@ -60,7 +60,6 @@ def showLogin():
 
 
 # Show homepage with all categories
-
 @app.route('/')
 @app.route('/category')
 def showCategories():
@@ -69,8 +68,8 @@ def showCategories():
 
 
 # Show a category's catalog
-@app.route('/category/<int:category_id>')
-@app.route('/category/<int:category_id>/catalog')
+@app.route('/category/<int:category_id>/')
+@app.route('/category/<int:category_id>/catalog/')
 def showCatalog(category_id):
     category = session.query(Category).filter_by(id=category_id).one()
     items = session.query(CategoryItem).filter_by(
@@ -80,7 +79,7 @@ def showCatalog(category_id):
 
 # Create a new catalog item
 @app.route(
-    '/category/<int:category_id>/catalog/new', methods=['GET', 'POST'])
+    '/category/<int:category_id>/catalog/new/', methods=['GET', 'POST'])
 def newCatalogItem(category_id):
     # check if there is a user logged in. if not, redirect to login
     if 'username' not in login_session:
@@ -99,7 +98,7 @@ def newCatalogItem(category_id):
 
 
 # Show a catalog item's information and options to edit/delete
-@app.route('/category/<int:category_id>/catalog/<int:item_id>')
+@app.route('/category/<int:category_id>/catalog/<int:item_id>/')
 def showCatalogItem(item_id, category_id):
     item = session.query(CategoryItem).filter_by(id=item_id).one()
     return render_template('viewCatalogItem.html',
@@ -108,7 +107,7 @@ def showCatalogItem(item_id, category_id):
 
 
 # Edit a catalog item
-@app.route('/category/<int:category_id>/catalog/<int:item_id>/edit',
+@app.route('/category/<int:category_id>/catalog/<int:item_id>/edit/',
            methods=['GET', 'POST'])
 def editCatalogItem(category_id, item_id):
     # check if there is a user logged in. if not, redirect to login
@@ -118,10 +117,10 @@ def editCatalogItem(category_id, item_id):
     # check if the currently logged on user is authorized to edit this item
     if login_session['user_id'] != editedItem.user_id:
         # if the user is not authorized, give them an error message
-        return "<script>function myFunction() "+
-        "{alert('You are not authorized to edit this item.'); "+
-        "window.location.href = '/category/%i/catalog/%i';}</script>"+
-        "<body onload='myFunction()''>" % (category_id, item_id)
+        return ("<script>function myFunction() "
+                "{alert('You are not authorized to edit this item.'); "
+                "window.location.href = '/category/%i/catalog/%i';}</script>"
+                "<body onload='myFunction()''>" % (category_id, item_id))
     if request.method == 'POST':
         if request.form['itemName']:
             editedItem.itemName = request.form['itemName']
@@ -139,7 +138,7 @@ def editCatalogItem(category_id, item_id):
 
 
 # Delete a catalog item
-@app.route('/category/<int:category_id>/catalog/<int:item_id>/delete',
+@app.route('/category/<int:category_id>/catalog/<int:item_id>/delete/',
            methods=['GET', 'POST'])
 def deleteCatalogItem(category_id, item_id):
     # check if there is a user logged in. if not, redirect to login
@@ -149,10 +148,10 @@ def deleteCatalogItem(category_id, item_id):
     # check if the currently logged on user is authorized to edit this item
     if login_session['user_id'] != itemToDelete.user_id:
         # if the user is not authorized, give them an error message
-        return "<script>function myFunction() "+
-        "{alert('You are not authorized to delete this item.'); "+
-        "window.location.href = '/category/%i/catalog/%i';}</script>"+
-        "<body onload='myFunction()''>" % (category_id, item_id)
+        return ("<script>function myFunction() "
+                "{alert('You are not authorized to delete this item.'); "
+                "window.location.href = '/category/%i/catalog/%i';}</script>"
+                "<body onload='myFunction()''>" % (category_id, item_id))
     if request.method == 'POST':
         session.delete(itemToDelete)
         session.commit()
