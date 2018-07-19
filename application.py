@@ -4,7 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from dbsetup import Base, Category, CategoryItem, User
 
 from flask import session as login_session
-import random, string
+import random
+import string
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
@@ -26,11 +27,13 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # JSON APIs
+
+
 @app.route('/categories/JSON/')
 def categoriesJSON():
-    #category = session.query(Category).filter_by(id=category_id).one()
     categories = session.query(Category).all()
     return jsonify(categories=[c.serialize for c in categories])
+
 
 @app.route('/category/<int:category_id>/catalog/JSON/')
 def catalogItemsJSON(category_id):
@@ -38,6 +41,7 @@ def catalogItemsJSON(category_id):
     catalogItems = session.query(CategoryItem).filter_by(
         category_id=category_id).all()
     return jsonify(catalogItems=[i.serialize for i in catalogItems])
+
 
 @app.route('/users/JSON/')
 def userJSON():
@@ -54,12 +58,15 @@ def showLogin():
     print state
     return render_template('login.html', STATE=state)
 
+
 # Show homepage with all categories
+
 @app.route('/')
 @app.route('/category')
 def showCategories():
     categories = session.query(Category).all()
     return render_template('home.html', categories=categories)
+
 
 # Show a category's catalog
 @app.route('/category/<int:category_id>')
@@ -70,27 +77,35 @@ def showCatalog(category_id):
         category_id=category_id).all()
     return render_template('catalog.html', items=items, category=category)
 
+
 # Create a new catalog item
 @app.route(
     '/category/<int:category_id>/catalog/new', methods=['GET', 'POST'])
-def newCatalogItem(category_id): 
+def newCatalogItem(category_id):
     # check if there is a user logged in. if not, redirect to login
     if 'username' not in login_session:
-        return redirect(url_for('showLogin'))       
+        return redirect(url_for('showLogin'))
     if request.method == 'POST':
-        newItem = CategoryItem(itemName=request.form['itemName'], description=request.form[
-                           'description'], price=request.form['price'], category_id=category_id, user_id=login_session['user_id'])
+        newItem = CategoryItem(itemName=request.form['itemName'],
+                               description=request.form['description'],
+                               price=request.form['price'],
+                               category_id=category_id,
+                               user_id=login_session['user_id'])
         session.add(newItem)
         session.commit()
         return redirect(url_for('showCatalog', category_id=category_id))
     else:
         return render_template('newCatalogItem.html', category_id=category_id)
 
+
 # Show a catalog item's information and options to edit/delete
 @app.route('/category/<int:category_id>/catalog/<int:item_id>')
 def showCatalogItem(item_id, category_id):
     item = session.query(CategoryItem).filter_by(id=item_id).one()
-    return render_template('viewCatalogItem.html', item_id=item_id, category_id=category_id, item=item) 
+    return render_template('viewCatalogItem.html',
+                           item_id=item_id, category_id=category_id,
+                           item=item)
+
 
 # Edit a catalog item
 @app.route('/category/<int:category_id>/catalog/<int:item_id>/edit',
@@ -103,20 +118,25 @@ def editCatalogItem(category_id, item_id):
     # check if the currently logged on user is authorized to edit this item
     if login_session['user_id'] != editedItem.user_id:
         # if the user is not authorized, give them an error message
-        return "<script>function myFunction() {alert('You are not authorized to edit this item.'); window.location.href = '/category/%i/catalog/%i';}</script><body onload='myFunction()''>" % (category_id, item_id)
+        return "<script>function myFunction() "+
+        "{alert('You are not authorized to edit this item.'); "+
+        "window.location.href = '/category/%i/catalog/%i';}</script>"+
+        "<body onload='myFunction()''>" % (category_id, item_id)
     if request.method == 'POST':
-       if request.form['itemName']:
-           editedItem.itemName = request.form['itemName']
-       if request.form['description']:
-           editedItem.description = request.form['description']
-       if request.form['price']:
-           editedItem.price = request.form['price']
-       session.add(editedItem)
-       session.commit()
-       return redirect(url_for('showCatalog', category_id=category_id))
+        if request.form['itemName']:
+            editedItem.itemName = request.form['itemName']
+        if request.form['description']:
+            editedItem.description = request.form['description']
+        if request.form['price']:
+            editedItem.price = request.form['price']
+        session.add(editedItem)
+        session.commit()
+        return redirect(url_for('showCatalog', category_id=category_id))
     else:
-       return render_template(
-           'editCatalogItem.html', category_id=category_id, item_id=item_id, item=editedItem)
+        return render_template(
+            'editCatalogItem.html', category_id=category_id,
+            item_id=item_id, item=editedItem)
+
 
 # Delete a catalog item
 @app.route('/category/<int:category_id>/catalog/<int:item_id>/delete',
@@ -129,13 +149,18 @@ def deleteCatalogItem(category_id, item_id):
     # check if the currently logged on user is authorized to edit this item
     if login_session['user_id'] != itemToDelete.user_id:
         # if the user is not authorized, give them an error message
-        return "<script>function myFunction() {alert('You are not authorized to delete this item.'); window.location.href = '/category/%i/catalog/%i';}</script><body onload='myFunction()''>" % (category_id, item_id)
+        return "<script>function myFunction() "+
+        "{alert('You are not authorized to delete this item.'); "+
+        "window.location.href = '/category/%i/catalog/%i';}</script>"+
+        "<body onload='myFunction()''>" % (category_id, item_id)
     if request.method == 'POST':
-       session.delete(itemToDelete)
-       session.commit()
-       return redirect(url_for('showCatalog', category_id=category_id))
+        session.delete(itemToDelete)
+        session.commit()
+        return redirect(url_for('showCatalog', category_id=category_id))
     else:
-       return render_template('deleteCatalogItem.html', category_id=category_id, item=itemToDelete)
+        return render_template('deleteCatalogItem.html',
+                               category_id=category_id, item=itemToDelete)
+
 
 # create a new user in the database when they log in for the first time
 def createUser(login_session):
@@ -146,6 +171,7 @@ def createUser(login_session):
     user = session.query(User).filter_by(email=login_session['email']).one()
     return user.id
 
+
 # get the email for the currently logged in user
 def getUserID(email):
     try:
@@ -153,6 +179,7 @@ def getUserID(email):
         return user.id
     except:
         return None
+
 
 # gconnect uses the google log in API to authenticate a uiser
 @app.route('/gconnect', methods=['POST'])
@@ -207,8 +234,8 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(json.dumps(
+                                'Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -231,13 +258,14 @@ def gconnect():
     if not user_id:
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
-    
+
     # return some HTML to display on the webpage
     output = ''
     output += '<p>Welcome, '
     output += login_session['username']
     output += '!</p>'
     return output
+
 
 # gdisconnect removes the current login session
 @app.route('/gdisconnect')
@@ -272,8 +300,7 @@ def gdisconnect():
             json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
-    
-    
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
